@@ -9,8 +9,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +37,7 @@ import com.baidu.platform.comapi.basestruct.GeoPoint;
 public class GroupActivity extends Activity{
 	private TextView tv=null;
 	private String username=null;
+	private String addedUser=null;
 	private String groupname=null;
 	private String gpsdata=null;
 	private double longitude=0;
@@ -114,6 +120,49 @@ public class GroupActivity extends Activity{
 	    if (!mLocationClient.isStarted())
 	    	mLocationClient.start();
 	    mLocationClient.requestLocation();
+	}
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		menu.add(Menu.NONE, Menu.NONE, 1, "修改…");
+		menu.add(Menu.NONE, Menu.NONE, 2, "添加成员");
+		MenuItem addUserItem=menu.getItem(1);
+		addUserItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {			
+			@Override
+			public boolean onMenuItemClick(MenuItem item) {
+				// TODO Auto-generated method stub
+				final EditText et0=new EditText(GroupActivity.this);
+				AlertDialog dlg=new AlertDialog.Builder(GroupActivity.this).setTitle("请输入用户名")
+						                                     .setView(et0)
+						                                     .setPositiveButton("添加", new DialogInterface.OnClickListener() {
+																@Override
+																public void onClick(DialogInterface dialog, int which) {
+																	// TODO Auto-generated method stub
+																	addedUser=et0.getText().toString();
+																	FutureTask<Integer> future = new FutureTask<Integer>(addUserHandler);
+													    			new Thread(future).start();
+													    			try {
+																		if(future.get()==1){
+																			Toast toast = Toast.makeText( getApplicationContext() ,"添加成功",Toast.LENGTH_LONG);
+																			toast.show();
+																		}else{
+																			Toast toast = Toast.makeText( getApplicationContext() ,"添加失败",Toast.LENGTH_LONG);
+																			toast.show();
+																		}
+																	} catch (Exception e) {
+																		// TODO Auto-generated catch block
+																		Toast toast = Toast.makeText( getApplicationContext() ,"网络连接存在异常",Toast.LENGTH_LONG);
+																		toast.show();
+																		e.printStackTrace();
+																	}
+																}
+															  })													
+						                                     .create();
+				dlg.show();
+				return false;
+			}
+		});
+		return super.onCreateOptionsMenu(menu);
 	}
 	@Override
 	protected void onDestroy() {
@@ -231,5 +280,36 @@ public class GroupActivity extends Activity{
 		}
 	};
 	
+Callable<Integer> addUserHandler=new Callable<Integer>() {
+		
+		@Override
+		public Integer call() throws Exception {
+			// TODO Auto-generated method stub
+			HttpURLConnection connection=null;
+			URL  url=new URL("http://0.daoleme.duapp.com/adduser.py");
+			connection =(HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestMethod("POST");
+			//connection.setRequestProperty("Content-Type","text/plain; charset=UTF-8");
+			connection.connect();
+			
+			DataOutputStream out=new DataOutputStream(connection.getOutputStream());
+			out.writeBytes("username="+addedUser+"&groupname="+groupname+"\n");
+			out.flush();
+			out.close();
+			
+			//getResponse();
+			BufferedReader br=null;
+			br=new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String addUserResp=br.readLine();
+			connection.disconnect();
+			if("Add User OK!".equals(addUserResp)){
+				return 1;
+			}else{
+				return 0;
+			}
+			
+		}
+	};
  
 }

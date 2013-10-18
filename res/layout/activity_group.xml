@@ -30,25 +30,4 @@
                     android:layout_height="wrap_content"  
                     android:clickable="true" />  
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-         >
-
-        <Button
-            android:id="@+id/edit_group"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/edit_group" />
-
-        <Button
-            android:id="@+id/add_user"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true"
-            android:text="@string/add_user" />
-
-    </RelativeLayout>
-
 </LinearLayout>
