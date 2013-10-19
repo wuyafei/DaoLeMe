@@ -27,7 +27,9 @@ public class UserActivity extends Activity{
 	private String groups=null;
 	private String clickedGroup=null;
 	private String groupGPS=null;
+	private String refreshedInfo=null;
 	private Button btnCreateGroup=null;
+	private Button btnRefreshUser=null;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +77,8 @@ public class UserActivity extends Activity{
 	            }
 			});
 		}
+		btnRefreshUser=(Button)findViewById(R.id.refresh_user);
+		btnRefreshUser.setOnClickListener(new refreshUserListener());
 		btnCreateGroup=(Button)findViewById(R.id.create_group);
 		btnCreateGroup.setOnClickListener(new createGroupListener());
 		
@@ -95,6 +99,26 @@ public class UserActivity extends Activity{
 			intent.putExtra("username", username);
     		intent.setClass(UserActivity.this, CreateGroupActivity.class);
     		UserActivity.this.startActivity(intent);
+		}
+	}
+	
+	class refreshUserListener implements android.view.View.OnClickListener{
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			FutureTask<Integer> future = new FutureTask<Integer>(refreshUserHandler);
+			new Thread(future).start();
+			try {
+				if(future.get()==1){
+					String[] groups=refreshedInfo.split(";");
+					lv.setAdapter(new ArrayAdapter<String>(UserActivity.this,android.R.layout.simple_expandable_list_item_1, groups));
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				Toast toast = Toast.makeText( getApplicationContext() ,"网络连接存在异常",Toast.LENGTH_LONG);
+				toast.show();
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -123,6 +147,39 @@ Callable<Integer> getGroupGPSHandler=new Callable<Integer>() {
 			connection.disconnect();
 			if("Get Group GPS OK!".equals(getGPSResp)){
 				groupGPS=br.readLine();
+				return 1;
+			}else{
+				return 0;
+			}
+			
+		}
+	};
+	
+Callable<Integer> refreshUserHandler=new Callable<Integer>() {
+		
+		@Override
+		public Integer call() throws Exception {
+			// TODO Auto-generated method stub
+			HttpURLConnection connection=null;
+			URL  url=new URL("http://0.daoleme.duapp.com/refreshuser.py");
+			connection =(HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestMethod("POST");
+			//connection.setRequestProperty("Content-Type","text/plain; charset=UTF-8");
+			connection.connect();
+			
+			DataOutputStream out=new DataOutputStream(connection.getOutputStream());
+			out.writeBytes("username="+username+"\n");
+			out.flush();
+			out.close();
+			
+			//getResponse();
+			BufferedReader br=null;
+			br=new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String refreshResp=br.readLine();
+			connection.disconnect();
+			if("Refresh User OK!".equals(refreshResp)){
+				refreshedInfo=br.readLine();
 				return 1;
 			}else{
 				return 0;

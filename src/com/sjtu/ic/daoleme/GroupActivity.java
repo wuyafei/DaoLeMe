@@ -37,7 +37,8 @@ import com.baidu.platform.comapi.basestruct.GeoPoint;
 public class GroupActivity extends Activity{
 	private TextView tv=null;
 	private String username=null;
-	private String addedUser=null;
+	private String addingUser=null;
+	private String removingUser=null;
 	private String groupname=null;
 	private String gpsdata=null;
 	private double longitude=0;
@@ -126,27 +127,33 @@ public class GroupActivity extends Activity{
 		// TODO Auto-generated method stub
 		menu.add(Menu.NONE, Menu.NONE, 1, "修改…");
 		menu.add(Menu.NONE, Menu.NONE, 2, "添加成员");
+		menu.add(Menu.NONE, Menu.NONE, 3, "移除成员");
 		MenuItem addUserItem=menu.getItem(1);
+		MenuItem rmUserItem=menu.getItem(2);
 		addUserItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {			
 			@Override
 			public boolean onMenuItemClick(MenuItem item) {
 				// TODO Auto-generated method stub
 				final EditText et0=new EditText(GroupActivity.this);
-				AlertDialog dlg=new AlertDialog.Builder(GroupActivity.this).setTitle("请输入用户名")
+				AlertDialog dlg0=new AlertDialog.Builder(GroupActivity.this).setTitle("请输入用户名")
 						                                     .setView(et0)
 						                                     .setPositiveButton("添加", new DialogInterface.OnClickListener() {
 																@Override
 																public void onClick(DialogInterface dialog, int which) {
 																	// TODO Auto-generated method stub
-																	addedUser=et0.getText().toString();
+																	addingUser=et0.getText().toString();
 																	FutureTask<Integer> future = new FutureTask<Integer>(addUserHandler);
 													    			new Thread(future).start();
 													    			try {
-																		if(future.get()==1){
+													    				int response=future.get();
+																		if(response==2){
 																			Toast toast = Toast.makeText( getApplicationContext() ,"添加成功",Toast.LENGTH_LONG);
 																			toast.show();
+																		}else if(response==1){
+																			Toast toast = Toast.makeText( getApplicationContext() ,"成员已经存在组内",Toast.LENGTH_LONG);
+																			toast.show();
 																		}else{
-																			Toast toast = Toast.makeText( getApplicationContext() ,"添加失败",Toast.LENGTH_LONG);
+																			Toast toast = Toast.makeText( getApplicationContext() ,"用户名不存在",Toast.LENGTH_LONG);
 																			toast.show();
 																		}
 																	} catch (Exception e) {
@@ -158,10 +165,51 @@ public class GroupActivity extends Activity{
 																}
 															  })													
 						                                     .create();
-				dlg.show();
+				dlg0.show();
 				return false;
 			}
 		});
+		
+		rmUserItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {			
+			@Override
+			public boolean onMenuItemClick(MenuItem item) {
+				// TODO Auto-generated method stub
+				final EditText et1=new EditText(GroupActivity.this);
+				AlertDialog dlg1=new AlertDialog.Builder(GroupActivity.this).setTitle("请输入用户名")
+						                                     .setView(et1)
+						                                     .setPositiveButton("删除", new DialogInterface.OnClickListener() {
+																@Override
+																public void onClick(DialogInterface dialog, int which) {
+																	// TODO Auto-generated method stub
+																	removingUser=et1.getText().toString();
+																	FutureTask<Integer> future = new FutureTask<Integer>(rmUserHandler);
+													    			new Thread(future).start();
+													    			try {
+													    				int response1=future.get();
+																		if(response1==2){
+																			Toast toast = Toast.makeText( getApplicationContext() ,"移除成功",Toast.LENGTH_LONG);
+																			toast.show();
+																		}else if(response1==1){
+																			Toast toast = Toast.makeText( getApplicationContext() ,"用户不在组内",Toast.LENGTH_LONG);
+																			toast.show();
+																		}else{
+																			Toast toast = Toast.makeText( getApplicationContext() ,"用户名不存在",Toast.LENGTH_LONG);
+																			toast.show();
+																		}
+																	} catch (Exception e) {
+																		// TODO Auto-generated catch block
+																		Toast toast = Toast.makeText( getApplicationContext() ,"网络连接存在异常",Toast.LENGTH_LONG);
+																		toast.show();
+																		e.printStackTrace();
+																	}
+																}
+															  })													
+						                                     .create();
+				dlg1.show();
+				return false;
+			}
+		});
+		
 		return super.onCreateOptionsMenu(menu);
 	}
 	@Override
@@ -280,7 +328,7 @@ public class GroupActivity extends Activity{
 		}
 	};
 	
-Callable<Integer> addUserHandler=new Callable<Integer>() {
+	Callable<Integer> addUserHandler=new Callable<Integer>() {
 		
 		@Override
 		public Integer call() throws Exception {
@@ -294,7 +342,7 @@ Callable<Integer> addUserHandler=new Callable<Integer>() {
 			connection.connect();
 			
 			DataOutputStream out=new DataOutputStream(connection.getOutputStream());
-			out.writeBytes("username="+addedUser+"&groupname="+groupname+"\n");
+			out.writeBytes("username="+addingUser+"&groupname="+groupname+"\n");
 			out.flush();
 			out.close();
 			
@@ -304,10 +352,45 @@ Callable<Integer> addUserHandler=new Callable<Integer>() {
 			String addUserResp=br.readLine();
 			connection.disconnect();
 			if("Add User OK!".equals(addUserResp)){
+				return 2;
+			}else if("Username already in group!".equals(addUserResp)){
 				return 1;
 			}else{
 				return 0;
 			}
+			
+		}
+	};
+	
+Callable<Integer> rmUserHandler=new Callable<Integer>() {
+		
+		@Override
+		public Integer call() throws Exception {
+			// TODO Auto-generated method stub
+			HttpURLConnection connection=null;
+			URL  url=new URL("http://0.daoleme.duapp.com/rmuser.py");
+			connection =(HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestMethod("POST");
+			//connection.setRequestProperty("Content-Type","text/plain; charset=UTF-8");
+			connection.connect();
+			
+			DataOutputStream out=new DataOutputStream(connection.getOutputStream());
+			out.writeBytes("username="+removingUser+"&groupname="+groupname+"\n");
+			out.flush();
+			out.close();
+			
+			//getResponse();
+			BufferedReader br=null;
+			br=new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String rmUserResp=br.readLine();
+			connection.disconnect();
+			if("Remove User OK!".equals(rmUserResp)){
+				return 2;
+			}else if("Username not in group!".equals(rmUserResp)){
+				return 1;
+			}else
+				return 0;
 			
 		}
 	};

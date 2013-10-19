@@ -25,16 +25,16 @@ public final class R {
     }
     public static final class id {
         public static final int LinearLayout1=0x7f080014;
-        public static final int action_settings=0x7f080018;
+        public static final int action_settings=0x7f080019;
         public static final int bmapsView=0x7f080009;
         public static final int btn_login=0x7f08000f;
         public static final int btn_signup=0x7f08000e;
-        public static final int create_group=0x7f080017;
+        public static final int create_group=0x7f080018;
         public static final int create_group_name=0x7f08000a;
         public static final int group_location=0x7f080003;
         public static final int group_time=0x7f080004;
         public static final int group_to_create=0x7f080001;
-        public static final int groups_list=0x7f080016;
+        public static final int groups_list=0x7f080017;
         public static final int login_password=0x7f08000c;
         public static final int login_username=0x7f08000b;
         public static final int my_group=0x7f080007;
@@ -42,6 +42,7 @@ public final class R {
         public static final int password=0x7f080011;
         public static final int password_repeat=0x7f080012;
         public static final int refresh_group=0x7f080008;
+        public static final int refresh_user=0x7f080016;
         public static final int submit_create_group=0x7f080006;
         public static final int submit_login=0x7f08000d;
         public static final int submit_signup=0x7f080013;
