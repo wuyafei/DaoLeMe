@@ -41,11 +41,13 @@ public class GroupActivity extends Activity{
 	private String removingUser=null;
 	private String groupname=null;
 	private String gpsdata=null;
+	private String locationName=null;
 	private double longitude=0;
 	private double latitude=0;
 	private double locationLng=0;
 	private double locationLat=0;
 	private Symbol.Color textColor=null;
+	private Symbol.Color bgColor=null;
 	public LocationClient mLocationClient = null;
 	public BDLocationListener myListener = new MyLocationListener();
 	
@@ -54,6 +56,7 @@ public class GroupActivity extends Activity{
 	
 	public MyLocationOverlay myLocationOverlay=null;
 	public TextOverlay txOverlay=null;
+	public TextOverlay locTxOverlay=null;
 	public LocationData myLocData = new LocationData();  
 	
 	@Override
@@ -66,6 +69,7 @@ public class GroupActivity extends Activity{
 		Intent it=getIntent();
 		username=it.getStringExtra("username");
 		groupname=it.getStringExtra("groupname");
+		locationName=it.getStringExtra("locationname");
 		locationLng=it.getDoubleExtra("longitude",121.44581);
 		locationLat=it.getDoubleExtra("latitude", 31.02243);
 		tv=(TextView)findViewById(R.id.my_group);
@@ -85,22 +89,34 @@ public class GroupActivity extends Activity{
 		//Drawable mark= getResources().getDrawable(R.drawable.ic_launcher); 
 		//itemOverlay=new ItemizedOverlay<OverlayItem>(mark, mMapView); 
 		txOverlay=new TextOverlay(mMapView);
+		locTxOverlay=new TextOverlay(mMapView);
 		myLocationOverlay = new MyLocationOverlay(mMapView); 
 		
 		Symbol textSymbol = new Symbol();    
 		textColor = textSymbol.new Color();    
-		textColor.alpha = 150;    
+		textColor.alpha = 255;    
 		textColor.red = 255;    
 		textColor.blue = 0;    
-		textColor.green = 0;   
+		textColor.green = 0;
+		
+		Symbol bgSymbol = new Symbol();    
+		bgColor = bgSymbol.new Color();    
+		bgColor.alpha = 150;    
+		bgColor.red = 80;    
+		bgColor.blue = 80;    
+		bgColor.green = 80;
 		
 		TextItem ti = new TextItem();
 		ti.pt=point;
-		ti.text=groupname;
+		ti.text=locationName;
 		ti.fontColor=textColor;
-		txOverlay.addText(ti);
+		ti.bgColor=bgColor;
+		ti.fontSize=35;
+		locTxOverlay.addText(ti);
+		mMapView.refresh();
 		
 		mMapView.getOverlays().add(myLocationOverlay);
+		mMapView.getOverlays().add(locTxOverlay);
 		mMapView.getOverlays().add(txOverlay);
 		
 		mLocationClient = new LocationClient(getApplicationContext());     //ÉùÃ÷LocationClientÀà
@@ -268,13 +284,18 @@ public class GroupActivity extends Activity{
 					Toast toast = Toast.makeText( getApplicationContext() ,gpsdata,Toast.LENGTH_LONG);
 					toast.show();
 					String[] userdatas=gpsdata.split(";");
-					for(int i=1;i<userdatas.length;i++){
+					txOverlay.removeAll();
+					for(int i=0;i<userdatas.length;i++){
 						String[] userdata=userdatas[i].split(":");
+						if(userdata[0].equals(username))
+							continue;
 						GeoPoint p = new GeoPoint((int) (Double.valueOf(userdata[2]) * 1E6), (int) (Double.valueOf(userdata[1]) * 1E6));
 						TextItem textItem = new TextItem();  
 						textItem.text=userdata[0];
 						textItem.pt=p;
+						textItem.fontSize=25;
 						textItem.fontColor=textColor;
+						textItem.bgColor=bgColor;
 						txOverlay.addText(textItem);
 					}
 					mMapView.refresh();  

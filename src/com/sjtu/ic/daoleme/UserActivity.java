@@ -27,6 +27,7 @@ public class UserActivity extends Activity{
 	private String groups=null;
 	private String clickedGroup=null;
 	private String groupGPS=null;
+	private String locName=null;
 	private String refreshedInfo=null;
 	private Button btnCreateGroup=null;
 	private Button btnRefreshUser=null;
@@ -59,6 +60,7 @@ public class UserActivity extends Activity{
 		    				Intent intent=new Intent();
 			                intent.putExtra("username", username);
 			                intent.putExtra("groupname", clickedGroup);
+			                intent.putExtra("locationname", locName);
 			                intent.putExtra("longitude", lon);
 			                intent.putExtra("latitude", lat);
 			        		intent.setClass(UserActivity.this, GroupActivity.class);
@@ -147,6 +149,7 @@ Callable<Integer> getGroupGPSHandler=new Callable<Integer>() {
 			connection.disconnect();
 			if("Get Group GPS OK!".equals(getGPSResp)){
 				groupGPS=br.readLine();
+				locName=br.readLine();
 				return 1;
 			}else{
 				return 0;
