@@ -47,37 +47,7 @@ public class UserActivity extends Activity{
 			String[] groupnames=groups.split(";");
 			lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_expandable_list_item_1, groupnames));
 			
-			lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-				public void onItemClick(AdapterView<?> arg0, android.view.View arg1, int arg2,long arg3){
-	                clickedGroup=((TextView)arg1).getText().toString();
-	                FutureTask<Integer> future = new FutureTask<Integer>(getGroupGPSHandler);
-	    			new Thread(future).start();
-	    			try{
-		    			if(future.get()==1){
-		    				String[] gpsdata=groupGPS.split(":");
-		    				Double lon=Double.valueOf(gpsdata[0]);
-		    				Double lat=Double.valueOf(gpsdata[1]);
-		    				Intent intent=new Intent();
-			                intent.putExtra("username", username);
-			                intent.putExtra("groupname", clickedGroup);
-			                intent.putExtra("locationname", locName);
-			                intent.putExtra("longitude", lon);
-			                intent.putExtra("latitude", lat);
-			        		intent.setClass(UserActivity.this, GroupActivity.class);
-			        		UserActivity.this.startActivity(intent);
-						}else{
-							Toast toast = Toast.makeText( getApplicationContext() ,"载入位置错误",Toast.LENGTH_LONG);
-							toast.show();
-						} 
-	    			}catch (Exception e) {
-						Toast toast = Toast.makeText( getApplicationContext() ,"网络连接存在异常",Toast.LENGTH_LONG);
-						toast.show();
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-	    			}
-
-	            }
-			});
+			lv.setOnItemClickListener(new GroupItemListener());
 		}
 		btnRefreshUser=(Button)findViewById(R.id.refresh_user);
 		btnRefreshUser.setOnClickListener(new refreshUserListener());
@@ -104,6 +74,38 @@ public class UserActivity extends Activity{
 		}
 	}
 	
+	class GroupItemListener implements AdapterView.OnItemClickListener{
+		public void onItemClick(AdapterView<?> arg0, android.view.View arg1, int arg2,long arg3){
+            clickedGroup=((TextView)arg1).getText().toString();
+            FutureTask<Integer> future = new FutureTask<Integer>(getGroupGPSHandler);
+			new Thread(future).start();
+			try{
+    			if(future.get()==1){
+    				String[] gpsdata=groupGPS.split(":");
+    				Double lon=Double.valueOf(gpsdata[0]);
+    				Double lat=Double.valueOf(gpsdata[1]);
+    				Intent intent=new Intent();
+	                intent.putExtra("username", username);
+	                intent.putExtra("groupname", clickedGroup);
+	                intent.putExtra("locationname", locName);
+	                intent.putExtra("longitude", lon);
+	                intent.putExtra("latitude", lat);
+	        		intent.setClass(UserActivity.this, GroupActivity.class);
+	        		UserActivity.this.startActivity(intent);
+				}else{
+					Toast toast = Toast.makeText( getApplicationContext() ,"载入地图错误",Toast.LENGTH_LONG);
+					toast.show();
+				} 
+			}catch (Exception e) {
+				Toast toast = Toast.makeText( getApplicationContext() ,"网络连接存在异常",Toast.LENGTH_LONG);
+				toast.show();
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+        }
+	}
+	
 	class refreshUserListener implements android.view.View.OnClickListener{
 		@Override
 		public void onClick(View v) {
@@ -114,6 +116,10 @@ public class UserActivity extends Activity{
 				if(future.get()==1){
 					String[] groups=refreshedInfo.split(";");
 					lv.setAdapter(new ArrayAdapter<String>(UserActivity.this,android.R.layout.simple_expandable_list_item_1, groups));
+					lv.setOnItemClickListener(new GroupItemListener());
+				}else{
+					Toast toast = Toast.makeText( getApplicationContext() ,"刷新失败",Toast.LENGTH_LONG);
+					toast.show();
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

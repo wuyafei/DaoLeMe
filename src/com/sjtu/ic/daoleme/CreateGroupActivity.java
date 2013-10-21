@@ -22,10 +22,13 @@ public class CreateGroupActivity extends Activity{
 	private String location=null;
 	private String grouptime=null;
 	private String username=null;
-	
+	private String latitude=null;
+	private String longitude=null;
 	private EditText etGroupName=null;
 	private EditText etLocation=null;
 	private EditText etTime=null;
+	private EditText etLatitude=null;
+	private EditText etLongitude=null;
 	private Button btnSubmitCreateGroup=null;
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +38,9 @@ public class CreateGroupActivity extends Activity{
 		etGroupName=(EditText)findViewById(R.id.group_to_create);
 		etLocation=(EditText)findViewById(R.id.group_location);
 		etTime=(EditText)findViewById(R.id.group_time);
+		etLatitude=(EditText)findViewById(R.id.latitude);
+		etLongitude=(EditText)findViewById(R.id.longitude);
+		
 		Intent it=getIntent();
 		username=it.getStringExtra("username");
 		btnSubmitCreateGroup=(Button)findViewById(R.id.submit_create_group);
@@ -56,6 +62,8 @@ public class CreateGroupActivity extends Activity{
     		groupname=etGroupName.getText().toString();
     		location=etLocation.getText().toString();
     		grouptime=etTime.getText().toString();
+    		latitude=etLatitude.getText().toString();
+    		longitude=etLongitude.getText().toString();
     		FutureTask<Integer> future = new FutureTask<Integer>(submitCrtGrpHandler);
 			new Thread(future).start();
 			try{
@@ -63,6 +71,9 @@ public class CreateGroupActivity extends Activity{
 					Intent intent=new Intent();
 	                intent.putExtra("username", username);
 	                intent.putExtra("groupname", groupname);
+	                intent.putExtra("locationname", location);
+	                intent.putExtra("latitude", Double.valueOf(latitude));
+	                intent.putExtra("longitude", Double.valueOf(longitude));
 	        		intent.setClass(CreateGroupActivity.this, GroupActivity.class);
 	        		CreateGroupActivity.this.startActivity(intent);
 				}else{
@@ -93,7 +104,7 @@ Callable<Integer> submitCrtGrpHandler=new Callable<Integer>() {
 			connection.connect();
 			
 			DataOutputStream out=new DataOutputStream(connection.getOutputStream());
-			out.writeBytes("username="+username+"&groupname="+groupname+"&location="+location+"&time="+grouptime+"\n");
+			out.writeBytes("username="+username+"&groupname="+groupname+"&location="+java.net.URLEncoder.encode(location,"UTF-8")+"&latitude="+latitude+"&longitude="+longitude+"&time="+grouptime+"\n");
 			out.flush();
 			out.close();
 			

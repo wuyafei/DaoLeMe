@@ -15,6 +15,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +50,9 @@ public class GroupActivity extends Activity{
 	private double locationLat=0;
 	private Symbol.Color textColor=null;
 	private Symbol.Color bgColor=null;
+	private Button btnRefreshGroup=null;
+	private String refreshedGrpInfo=null;
+	
 	public LocationClient mLocationClient = null;
 	public BDLocationListener myListener = new MyLocationListener();
 	
@@ -74,6 +79,9 @@ public class GroupActivity extends Activity{
 		locationLat=it.getDoubleExtra("latitude", 31.02243);
 		tv=(TextView)findViewById(R.id.my_group);
 		tv.setText(groupname);
+		
+		btnRefreshGroup=(Button)findViewById(R.id.refresh_group);
+		btnRefreshGroup.setOnClickListener(new RefreshGroupListener());
 		
 		mMapView=(MapView)findViewById(R.id.bmapsView);  
 		mMapView.setBuiltInZoomControls(true);  
@@ -281,8 +289,8 @@ public class GroupActivity extends Activity{
 					Toast toast = Toast.makeText( getApplicationContext() ,"上传GPS数据失败",Toast.LENGTH_LONG);
 					toast.show();
 				}else{
-					Toast toast = Toast.makeText( getApplicationContext() ,gpsdata,Toast.LENGTH_LONG);
-					toast.show();
+					//Toast toast = Toast.makeText( getApplicationContext() ,gpsdata,Toast.LENGTH_LONG);
+					//toast.show();
 					String[] userdatas=gpsdata.split(";");
 					txOverlay.removeAll();
 					for(int i=0;i<userdatas.length;i++){
@@ -383,7 +391,7 @@ public class GroupActivity extends Activity{
 		}
 	};
 	
-Callable<Integer> rmUserHandler=new Callable<Integer>() {
+	Callable<Integer> rmUserHandler=new Callable<Integer>() {
 		
 		@Override
 		public Integer call() throws Exception {
@@ -415,5 +423,77 @@ Callable<Integer> rmUserHandler=new Callable<Integer>() {
 			
 		}
 	};
+	
+	class RefreshGroupListener implements android.view.View.OnClickListener{
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			FutureTask<Integer> future = new FutureTask<Integer>(refreshGroupHandler);
+		    new Thread(future).start();
+		    try {
+				if(future.get()==1){
+					String[] userdatas=refreshedGrpInfo.split(";");
+					txOverlay.removeAll();
+					for(int i=0;i<userdatas.length;i++){
+						String[] userdata=userdatas[i].split(":");
+						if(userdata[0].equals(username))
+							continue;
+						GeoPoint p = new GeoPoint((int) (Double.valueOf(userdata[2]) * 1E6), (int) (Double.valueOf(userdata[1]) * 1E6));
+						TextItem textItem = new TextItem();  
+						textItem.text=userdata[0];
+						textItem.pt=p;
+						textItem.fontSize=25;
+						textItem.fontColor=textColor;
+						textItem.bgColor=bgColor;
+						txOverlay.addText(textItem);
+					}
+					mMapView.refresh();  
+				}else{
+					Toast toast = Toast.makeText( getApplicationContext() ,"刷新失败",Toast.LENGTH_LONG);
+					toast.show();
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				Toast toast = Toast.makeText( getApplicationContext() ,"网络连接存在异常",Toast.LENGTH_LONG);
+				toast.show();
+				e.printStackTrace();
+			}
+			
+		}
+	}
+	
+	
+	Callable<Integer> refreshGroupHandler=new Callable<Integer>() {
+		
+		@Override
+		public Integer call() throws Exception {
+			// TODO Auto-generated method stub
+			HttpURLConnection connection=null;
+			URL  url=new URL("http://0.daoleme.duapp.com/refreshgroup.py");
+			connection =(HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestMethod("POST");
+			//connection.setRequestProperty("Content-Type","text/plain; charset=UTF-8");
+			connection.connect();
+			
+			DataOutputStream out=new DataOutputStream(connection.getOutputStream());
+			out.writeBytes("groupname="+groupname+"\n");
+			out.flush();
+			out.close();
+			
+			//getResponse();
+			BufferedReader br=null;
+			br=new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String rereshGrpResp=br.readLine();
+			connection.disconnect();
+			if("Refresh Group OK!".equals(rereshGrpResp)){
+				refreshedGrpInfo=br.readLine();
+				return 1;
+			}else
+				return 0;
+			
+		}
+	};
+	
  
 }

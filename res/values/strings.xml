@@ -18,4 +18,6 @@
 	<string name="location">地点</string>
 	<string name="time">时间</string>
 	<string name="default_time">2013/10/16 14:19</string>
+	<string name="latitude">纬度</string>
+	<string name="longitude">经度</string>
 </resources>
